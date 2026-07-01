@@ -214,9 +214,9 @@ $("[carousel='component']").each(function () {
 
   let logoEl = componentEl.find("#featured-work-logo");
 
-  // if (logoEl.length && !logoEl.parent().is(wrapEl)) {
-  //   wrapEl.append(logoEl);
-  // }
+  if (logoEl.length && !logoEl.parent().is(wrapEl)) {
+    wrapEl.append(logoEl);
+  }
 
   let swiperEl = componentEl.find(".swiper");
   let listEl = wrapEl.find(".carousel_list");
