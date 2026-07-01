@@ -169,7 +169,6 @@ document.addEventListener("DOMContentLoaded", function () {
     0.5,
   );
 });
-
 document.addEventListener("DOMContentLoaded", function () {
   const counters = document.querySelectorAll(".ta-cards-number");
 
@@ -214,9 +213,9 @@ $("[carousel='component']").each(function () {
 
   let logoEl = componentEl.find("#featured-work-logo");
 
-  // if (logoEl.length && !logoEl.parent().is(wrapEl)) {
-  //   wrapEl.append(logoEl);
-  // }
+  if (logoEl.length && !logoEl.parent().is(wrapEl)) {
+    wrapEl.append(logoEl);
+  }
 
   let swiperEl = componentEl.find(".swiper");
   let listEl = wrapEl.find(".carousel_list");
@@ -538,319 +537,12 @@ document.addEventListener("DOMContentLoaded", function () {
     },
   });
 });
+
 window.addEventListener("load", function () {
   gsap.delayedCall(0.2, function () {
     ScrollTrigger.sort();
     ScrollTrigger.refresh();
   });
-});
-
-$("[carousel='component']").each(function () {
-  let componentEl = $(this);
-  let wrapEl = componentEl.find("[carousel='wrap']");
-
-  let logoEl = componentEl.find("#featured-work-logo");
-
-  if (logoEl.length && !logoEl.parent().is(wrapEl)) {
-    wrapEl.append(logoEl);
-  }
-
-  let swiperEl = componentEl.find(".swiper");
-  let listEl = wrapEl.find(".carousel_list");
-  let itemEl = listEl.children();
-  let nextEl = componentEl.find("[carousel='next']");
-  let prevEl = componentEl.find("[carousel='prev']");
-  let totalArc = 180;
-  let rotateAmount = totalArc / (itemEl.length - 1);
-  let zTranslate = 2 * Math.tan((rotateAmount / 2) * (Math.PI / 180));
-  let negTranslate = `calc(var(--3d-carousel-item-width) / -${zTranslate} - var(--3d-carousel-gap))`;
-  let posTranslate = `calc(var(--3d-carousel-item-width) / ${zTranslate} + var(--3d-carousel-gap))`;
-
-  wrapEl.css("--3d-carousel-z", negTranslate);
-  wrapEl.css("perspective", posTranslate);
-
-  itemEl.each(function (index) {
-    $(this).css(
-      "transform",
-      `rotateY(${rotateAmount * index - 300}deg) translateZ(${posTranslate})`,
-    );
-  });
-
-  let introTl = gsap.timeline({
-    onComplete: () => {
-      swiperCode();
-    },
-  });
-  introTl.to(wrapEl, { opacity: 1, duration: 0.3 });
-  introTl.fromTo(
-    wrapEl,
-    { "--3d-carousel-rotate": 100, "--3d-carousel-rotate-x": -90 },
-    {
-      "--3d-carousel-rotate": 0,
-      "--3d-carousel-rotate-x": -4,
-      duration: 4,
-      ease: "power2.inOut",
-    },
-    "<",
-  );
-  introTl.to("[fade-up]", { opacity: 1 }, ">-0.3");
-
-  function swiperCode() {
-    console.log("swiperCode running");
-    const logo = document.querySelector("#featured-work-logo");
-    let tl = gsap.timeline({ paused: true });
-    tl.fromTo(
-      wrapEl,
-      { "--3d-carousel-rotate": 0 },
-      {
-        "--3d-carousel-rotate": -(totalArc + rotateAmount + 180),
-        duration: 1,
-        ease: "none",
-      },
-    );
-
-    let progress = { value: 0 };
-
-    const swiper = new Swiper(swiperEl[0], {
-      effect: "creative",
-      creativeEffect: {
-        prev: { translate: [0, "-100%", 0], scale: 0.5, opacity: 0 },
-        next: { translate: [0, "100%", 0], scale: 0.5, opacity: 0 },
-      },
-      grabCursor: true,
-      keyboard: true,
-      speed: 500,
-      mousewheel: false,
-      navigation: { nextEl: nextEl[0], prevEl: prevEl[0] },
-    });
-
-    let vimeoPlayers = [];
-    let hiddenSlides = new Set();
-    let seenSlides = new Set();
-    let logoActivated = false;
-
-    function setupVimeoPlayers() {
-      itemEl.each(function (index) {
-        const slide = $(this);
-        const oldIframe = slide.find("iframe")[0];
-        if (!oldIframe) return;
-
-        let oldSrc = oldIframe.getAttribute("src") || "";
-        if (oldSrc.startsWith("//")) {
-          oldSrc = window.location.protocol + oldSrc;
-        }
-
-        let directVimeoSrc = null;
-        try {
-          const oldUrl = new URL(oldSrc, window.location.href);
-          if (oldUrl.hostname.includes("player.vimeo.com")) {
-            directVimeoSrc = oldUrl.href;
-          }
-          if (oldUrl.hostname.includes("embedly.com")) {
-            const embeddedSrc = oldUrl.searchParams.get("src");
-            if (embeddedSrc && embeddedSrc.includes("player.vimeo.com")) {
-              directVimeoSrc = embeddedSrc;
-            }
-          }
-        } catch (e) {
-          console.log("Could not parse iframe src", e);
-        }
-
-        if (!directVimeoSrc) return;
-
-        const vimeoUrl = new URL(directVimeoSrc, window.location.href);
-        vimeoUrl.searchParams.set("muted", "1");
-        vimeoUrl.searchParams.set("autoplay", "0");
-        vimeoUrl.searchParams.set("loop", "1");
-        vimeoUrl.searchParams.set("playsinline", "1");
-        vimeoUrl.searchParams.set("autopause", "0");
-        vimeoUrl.searchParams.set("controls", "0");
-
-        const newIframe = document.createElement("iframe");
-        newIframe.src = vimeoUrl.toString();
-        newIframe.className = oldIframe.className;
-        newIframe.width = oldIframe.getAttribute("width") || "1920";
-        newIframe.height = oldIframe.getAttribute("height") || "1080";
-        newIframe.title = oldIframe.getAttribute("title") || "Vimeo video";
-        newIframe.setAttribute("frameborder", "0");
-        newIframe.setAttribute("scrolling", "no");
-        newIframe.setAttribute(
-          "allow",
-          "autoplay; fullscreen; encrypted-media; picture-in-picture",
-        );
-        newIframe.setAttribute("allowfullscreen", "true");
-
-        oldIframe.parentNode.replaceChild(newIframe, oldIframe);
-
-        if (window.Vimeo && Vimeo.Player) {
-          const player = new Vimeo.Player(newIframe);
-          player.setMuted(true).catch(() => {});
-          player.pause().catch(() => {});
-          vimeoPlayers[index] = player;
-        }
-      });
-    }
-
-    function playSlideVideo(slideIndex) {
-      vimeoPlayers.forEach(function (player, index) {
-        if (!player) return;
-        if (index === slideIndex) {
-          player.pause().catch(() => {});
-        } else {
-          player.pause().catch(() => {});
-        }
-      });
-    }
-
-    setupVimeoPlayers();
-
-    function normalizeAngle(angle) {
-      angle = angle % 360;
-      if (angle < 0) angle += 360;
-      return angle;
-    }
-
-    function hidePassedSlides(scrollDirection) {
-      const ringRotation = Number(
-        gsap.getProperty(wrapEl[0], "--3d-carousel-rotate"),
-      );
-
-      itemEl.each(function (index) {
-        const baseAngle = rotateAmount * index - 300;
-        const currentAngle = normalizeAngle(baseAngle + ringRotation);
-
-        if (currentAngle >= 320 || currentAngle <= 20) {
-          seenSlides.add(index);
-        }
-
-        const rect = this.getBoundingClientRect();
-        const slideCenter = rect.left + rect.width / 2;
-
-        if (seenSlides.has(index) && slideCenter < window.innerWidth * 0.05) {
-          this.classList.add("ready-to-hide");
-        }
-
-        let opacity = 1;
-
-        if (
-          scrollDirection === -1 &&
-          hiddenSlides.has(index) &&
-          currentAngle > 205
-        ) {
-          hiddenSlides.delete(index);
-        }
-
-        if (
-          seenSlides.has(index) &&
-          currentAngle <= 225 &&
-          currentAngle >= 205
-        ) {
-          if (!logoActivated) {
-            logoActivated = true;
-            logo?.classList.add("show");
-          }
-          const progress = (225 - currentAngle) / 20;
-          opacity = 1 - progress;
-        }
-
-        if (
-          scrollDirection === 1 &&
-          seenSlides.has(index) &&
-          currentAngle <= 205 &&
-          currentAngle >= 90
-        ) {
-          hiddenSlides.add(index);
-        }
-
-        if (hiddenSlides.has(index)) {
-          opacity = 0;
-        }
-
-        this.style.opacity = opacity;
-        this.style.pointerEvents = opacity < 0.05 ? "none" : "auto";
-      });
-
-      const sliderContainer = document.querySelector(
-        "#featured-work-slider-container",
-      );
-
-      if (logoActivated) {
-        sliderContainer?.classList.add("logo-active");
-        logo?.classList.add("show");
-      }
-
-      if (scrollDirection === -1 && hiddenSlides.size === 0) {
-        logoActivated = false;
-        sliderContainer?.classList.remove("logo-active");
-        logo?.classList.remove("show");
-      }
-    }
-
-    const sliderNode = componentEl[0];
-    const triggerId = "featured-work-slider-pin-" + componentEl.index();
-
-    if (ScrollTrigger.getById(triggerId)) {
-      ScrollTrigger.getById(triggerId).kill(true);
-    }
-
-    function getSliderScrollLength() {
-      return Math.max(
-        window.innerHeight * 2.2,
-        (itemEl.length + 1) * window.innerHeight * 0.65,
-      );
-    }
-
-    ScrollTrigger.create({
-      trigger: sliderNode,
-      pin: sliderNode,
-      start: "top top",
-      end: () => "+=" + getSliderScrollLength(),
-      scrub: true,
-      animation: tl,
-
-      onUpdate: (self) => {
-        hidePassedSlides(self.direction);
-      },
-
-      onLeave: () => {
-        const featuredWorks = document.querySelector(
-          "#vertical-featured-works-section",
-        );
-        if (!featuredWorks) return;
-        gsap.set(featuredWorks, { zIndex: 100, clearProps: "transform" });
-        ScrollTrigger.refresh();
-      },
-
-      pinSpacing: true,
-      anticipatePin: 1,
-      invalidateOnRefresh: true,
-    });
-
-    ScrollTrigger.create({
-      trigger: sliderNode,
-      onLeaveBack: () => {
-        hiddenSlides.clear();
-        seenSlides.clear();
-        logoActivated = false;
-
-        document
-          .querySelector("#featured-work-slider-container")
-          ?.classList.remove("logo-active");
-
-        logo?.classList.remove("show");
-
-        itemEl.each(function () {
-          this.style.opacity = "1";
-          this.style.pointerEvents = "auto";
-        });
-      },
-    });
-
-    requestAnimationFrame(() => {
-      ScrollTrigger.sort();
-      ScrollTrigger.refresh();
-    });
-  }
 });
 
 window.addEventListener("load", function () {
@@ -1397,6 +1089,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return g;
   }
 
+  /* ---------- scene ---------- */
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
   camera.position.set(0, 0, CFG.cameraZ);
@@ -1466,118 +1159,72 @@ document.addEventListener("DOMContentLoaded", function () {
 
   /* ---------- logo home + state machine (home | overlay | stage) ---------- */
   const home = logo.parentElement;
-  let overlay = null;
-  let state = "home";
-  let dx = 0;
-  let dy = 0;
+  let overlay = null,
+    state = "home",
+    dx = 0,
+    dy = 0;
 
-  function getLogoRect() {
+  function capture() {
     const r = logo.getBoundingClientRect();
     if (r.width < 1 || r.height < 1) return null;
+    dx = window.innerWidth / 2 - (r.left + r.width / 2);
+    dy = window.innerHeight / 2 - (r.top + r.height / 2);
     return r;
   }
-
-  function lockLogoToViewport(r, z) {
-    gsap.set(logo, {
+  function placeFixed(r, z) {
+    Object.assign(logo.style, {
       position: "fixed",
-      top: r.top,
-      left: r.left,
-      width: r.width,
-      height: r.height,
-      margin: 0,
-      zIndex: z,
+      top: r.top + "px",
+      left: r.left + "px",
+      width: r.width + "px",
+      height: r.height + "px",
+      margin: "0",
+      zIndex: String(z),
       pointerEvents: "none",
       display: "block",
-
-      // Important: remove parent/carousel transform offset
-      x: 0,
-      y: 0,
-      xPercent: 0,
-      yPercent: 0,
-      scale: 1,
-      rotation: 0,
-      transformOrigin: "center center",
     });
   }
-
-  function createOverlay() {
-    if (overlay) return overlay;
-
-    overlay = document.createElement("div");
-    overlay.className = "featured-logo-overlay";
-
-    Object.assign(overlay.style, {
-      position: "fixed",
-      inset: "0",
-      width: "100%",
-      height: "100%",
-      pointerEvents: "none",
-      zIndex: String(CFG.overlayZ),
-    });
-
-    document.body.appendChild(overlay);
-    return overlay;
-  }
-
   function raiseContent(on) {
-    if (on) {
-      gsap.set(cols, {
-        position: "relative",
-        zIndex: 2,
-      });
-    } else {
-      gsap.set(cols, {
-        clearProps: "zIndex,position",
-      });
-    }
+    if (on) gsap.set(cols, { position: "relative", zIndex: 2 });
+    else gsap.set(cols, { clearProps: "zIndex,position" });
   }
 
   function toOverlay() {
-    if (state === "overlay" || state === "stage") return;
-
-    const r = getLogoRect();
+    // gap hold: logo alone on top
+    if (state === "overlay") return;
+    const r = capture();
     if (!r) return;
-
-    // Calculate movement from current logo position to viewport center
-    dx = window.innerWidth / 2 - (r.left + r.width / 2);
-    dy = window.innerHeight / 2 - (r.top + r.height / 2);
-
-    // First lock it visually
-    lockLogoToViewport(r, CFG.overlayZ + 1);
-
-    // Then move it to body overlay
-    createOverlay().appendChild(logo);
-
-    // Re-apply same rect after append to avoid any browser/layout shift
-    lockLogoToViewport(r, CFG.overlayZ + 1);
-
+    if (!overlay) {
+      overlay = document.createElement("div");
+      Object.assign(overlay.style, {
+        position: "fixed",
+        inset: "0",
+        pointerEvents: "none",
+      });
+      document.body.appendChild(overlay);
+    }
+    overlay.style.zIndex = String(CFG.overlayZ);
+    overlay.appendChild(logo);
+    placeFixed(r, CFG.overlayZ + 1);
+    if (state === "stage") raiseContent(false);
     state = "overlay";
   }
-
   function toStage() {
+    // flatten: logo behind content, above bg
     if (state === "stage") return;
-
-    // Do NOT append logo into .brand_work.
-    // Keep the canvas in the body overlay so its position context stays stable.
-    if (state === "home") {
-      toOverlay();
-    }
-
-    raiseContent(true);
+    const r = capture();
+    if (!r) return;
+    stage.appendChild(logo); // inside .brand_work stacking context
+    placeFixed(r, 1); // z-index 1 (above bg)
+    raiseContent(true); // content -> z-index 2 (above logo)
     state = "stage";
   }
-
   function toHome() {
+    // back to the carousel
     if (state === "home") return;
-
     raiseContent(false);
-
-    gsap.set(logo, {
-      clearProps: "all",
-    });
-
+    logo.removeAttribute("style");
     home.appendChild(logo);
-
     setRot(0);
     state = "home";
   }
@@ -1604,6 +1251,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  /* .brand_work drives the flatten */
   ScrollTrigger.create({
     trigger: stage,
     start: "top top",
@@ -1622,51 +1270,35 @@ document.addEventListener("DOMContentLoaded", function () {
     },
 
     onUpdate: (self) => {
-      const p = self.progress;
-      const a = clamp(p / CFG.logoSpan, 0, 1);
-
+      const p = self.progress,
+        a = clamp(p / CFG.logoSpan, 0, 1);
       setRot(a);
-
-      if (state === "stage" || state === "overlay") {
+      if (state === "stage" || state === "overlay")
         gsap.set(logo, {
           x: dx * a,
           y: dy * a,
           scale: lerp(1, CFG.endScale, a),
           opacity: 1 - clamp((p - 0.45) / 0.15, 0, 1),
-          transformOrigin: "center center",
+          transformOrigin: "center",
         });
-      }
 
-      if (reel) {
-        const reelProgress = clamp((p - 0.42) / 0.3, 0, 1);
-
+      if (reel)
         gsap.set(reel, {
           opacity: clamp((p - 0.42) / 0.28, 0, 1),
-          scale: lerp(0.7, 1, reelProgress),
-          transformOrigin: "center center",
+          scale: lerp(0.7, 1, clamp((p - 0.42) / 0.3, 0, 1)),
+          transformOrigin: "center",
         });
-      }
 
       const b = clamp((p - 0.58) / 0.42, 0, 1);
-
-      rightRows.forEach((row, i) => {
-        const delay = i * 0.06;
-        const t = clamp((b - delay) / (1 - delay), 0, 1);
-
-        gsap.set(row, {
-          opacity: t,
-          x: lerp(45, 0, t),
-        });
+      rightRows.forEach((r, i) => {
+        const d = i * 0.06,
+          t = clamp((b - d) / (1 - d), 0, 1);
+        gsap.set(r, { opacity: t, x: lerp(45, 0, t) });
       });
-
-      leftKids.forEach((item, i) => {
-        const delay = i * 0.05;
-        const t = clamp((b - delay) / (1 - delay), 0, 1);
-
-        gsap.set(item, {
-          opacity: t,
-          y: lerp(26, 0, t),
-        });
+      leftKids.forEach((n, i) => {
+        const d = i * 0.05,
+          t = clamp((b - d) / (1 - d), 0, 1);
+        gsap.set(n, { opacity: t, y: lerp(26, 0, t) });
       });
     },
   });
